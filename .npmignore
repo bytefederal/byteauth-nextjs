@@ -1,0 +1,23 @@
+# Source files
+src/pages
+src/styles
+src/__tests__
+
+# Development files
+.github
+.git
+.gitignore
+.eslintrc
+.eslintignore
+.editorconfig
+.vscode
+.idea
+*.log
+*.tgz
+
+# Build files
+node_modules
+tsconfig.json
+tsconfig.build.json
+next.config.js
+jest.config.js
