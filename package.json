@@ -8,7 +8,8 @@
     "dist",
     "LICENSE",
     "README.md",
-    "install.js"
+    "install.js",
+    "byteauth-nextjs.png"
   ],
   "scripts": {
     "dev": "next dev",
