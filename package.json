@@ -1,6 +1,6 @@
 {
   "name": "@bytefederal/byteauth-nextjs",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A NextJS plugin for ByteAuth's biometric authentication system using crypto wallets",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
