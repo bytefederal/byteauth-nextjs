@@ -135,24 +135,116 @@ async function storeAuthenticatedSid(sid: string, userId: string): Promise<void>
 
 ### 4. Set Up NextAuth.js
 
-Configure NextAuth.js to work with ByteAuth by updating `pages/api/auth/[...nextauth].ts`:
+Configure NextAuth.js to work with ByteAuth by creating or updating `pages/api/auth/[...nextauth].ts`:
 
 ```typescript
 import NextAuth, { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
+import { createClient } from 'redis';
+
+// Redis client for session storage
+const redis = createClient({
+  url: process.env.REDIS_URL
+});
 
 export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
-      // ... ByteAuth credential configuration
+      // The name to display on the sign-in form
+      name: 'ByteAuth',
+      
+      // Define what fields are available in the credentials object
+      credentials: {
+        sid: { label: "Session ID", type: "text" }
+      },
+      
+      // This function verifies the ByteAuth session ID and retrieves the user
+      async authorize(credentials) {
+        if (!credentials?.sid) {
+          return null;
+        }
+
+        try {
+          // Connect to Redis
+          await redis.connect();
+          
+          // Check if this SID exists in Redis cache (set by webhook endpoints)
+          const userId = await redis.get(`authenticated_sid_${credentials.sid}`);
+          
+          if (!userId) {
+            return null;
+          }
+          
+          // Get user data from your database
+          const user = await getUserById(userId); // Implement this function
+          
+          if (!user) {
+            return null;
+          }
+          
+          // Clear SID from Redis to prevent reuse
+          await redis.del(`authenticated_sid_${credentials.sid}`);
+          await redis.disconnect();
+          
+          // Return user object which will be stored in the JWT
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+          };
+        } catch (error) {
+          console.error('Error in ByteAuth authorize:', error);
+          return null;
+        }
+      }
     }),
     // Add other providers as needed
   ],
-  // ... rest of NextAuth config
+  
+  // JWT configuration
+  session: {
+    strategy: 'jwt',
+    maxAge: 30 * 24 * 60 * 60, // 30 days
+  },
+  
+  callbacks: {
+    async jwt({ token, user }) {
+      if (user) {
+        token.userId = user.id;
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      if (token && session.user) {
+        session.user.id = token.userId as string;
+      }
+      return session;
+    },
+  },
+  
+  pages: {
+    signIn: '/login',
+    error: '/auth/error',
+  },
 };
+
+// Helper function to get user by ID (implement based on your database)
+async function getUserById(userId: string) {
+  // Example with Prisma:
+  // return prisma.user.findUnique({ where: { id: userId } });
+  
+  // Replace with your actual database query
+  return {
+    id: userId,
+    email: 'user@example.com',
+    name: 'Sample User',
+  };
+}
 
 export default NextAuth(authOptions);
 ```
+
+**Note:** You'll need to customize the `getUserById` function to work with your specific database.
 
 ### 5. Implement the UI Components
 
