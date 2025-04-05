@@ -66,7 +66,7 @@ const QRLogin: React.FC<QRLoginProps> = ({ onSidUpdate }) => {
         </div>
       )}
 
-      <style jsx>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         .qr-login-container {
           display: flex;
           justify-content: center;
@@ -104,7 +104,7 @@ const QRLogin: React.FC<QRLoginProps> = ({ onSidUpdate }) => {
           background: white;
           border-radius: 4px;
         }
-      `}</style>
+      ` }} />
     </div>
   );
 };

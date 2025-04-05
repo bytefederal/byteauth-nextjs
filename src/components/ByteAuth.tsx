@@ -86,7 +86,7 @@ const ByteAuth: React.FC<ByteAuthProps> = ({
         )}
       </div>
 
-      <style jsx>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         .byteauth-container {
           font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
           width: 100%;
@@ -152,7 +152,7 @@ const ByteAuth: React.FC<ByteAuthProps> = ({
         .byteauth-footer a:hover {
           text-decoration: underline;
         }
-      `}</style>
+      ` }} />
     </div>
   );
 };
