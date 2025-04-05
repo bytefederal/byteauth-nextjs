@@ -1,6 +1,6 @@
 # ByteAuth NextJS
 
-![ByteAuth NextJS](https://fast.bytefederal.com/img/logo.png)
+![ByteAuth NextJS](byteauth-nextjs.png)
 
 ## Introduction
 
