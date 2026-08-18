@@ -22,22 +22,26 @@ export const useByteAuth = (options: UseByteAuthOptions = {}) => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  const verifySession = useCallback(async (sessionId: string, email: string) => {
-    try {
-      const response = await axios.get(byteAuthConfig.verifySessionEndpoint, {
-        params: {
-          api_key: byteAuthConfig.apiKey,
-          sid: sessionId,
-          email: email,
-          domain: byteAuthConfig.domain,
-        },
-      });
-      
-      return response.status === 200;
-    } catch (error) {
-      console.error('Failed to verify session:', error);
-      return false;
-    }
+  /**
+   * @deprecated Session verification must happen server-side and this always
+   * returns false.
+   *
+   * SECURITY: this ran in the browser and sent `byteAuthConfig.apiKey`, which
+   * resolves from BYTEAUTH_API_KEY — a server-only variable, so it was always
+   * `undefined` here. Re-exposing it as NEXT_PUBLIC_ to "fix" that would publish
+   * your API key to every visitor. It also trusted any 2xx and ignored the
+   * `valid` field in the response body.
+   *
+   * Verify sessions in the webhook handlers under pages/api/byteauth/ instead,
+   * and use checkAuthStatus() from this hook to read the result.
+   */
+  const verifySession = useCallback(async (_sessionId: string, _email: string) => {
+    console.error(
+      'useByteAuth: verifySession() is deprecated and always returns false. ' +
+        'Verify sessions server-side in pages/api/byteauth/webhook/, then poll ' +
+        'checkAuthStatus(). See the security notice in the README.'
+    );
+    return false;
   }, []);
 
   const checkAuthStatus = useCallback(async () => {
