@@ -64,6 +64,13 @@ export default async function handler(
 
 // Verify session integrity with ByteAuth service
 async function verifySessionIntegrity(sid: string, email: string): Promise<boolean> {
+  // SECURITY: fail closed when the API key is unset. Without it the upstream
+  // cannot bind the session to your domain.
+  if (!byteAuthConfig.apiKey) {
+    console.error('BYTEAUTH_API_KEY is not set; refusing to verify session.');
+    return false;
+  }
+
   try {
     const params = {
       api_key: byteAuthConfig.apiKey,
@@ -73,7 +80,33 @@ async function verifySessionIntegrity(sid: string, email: string): Promise<boole
     };
 
     const response = await axios.get(byteAuthConfig.verifySessionEndpoint, { params });
-    return response.status === 200;
+
+    // SECURITY: a 2xx alone is weak evidence of a valid session. Require an
+    // affirmative marker in the response body, and that any email the upstream
+    // returns matches the one we were asked to authenticate.
+    if (response.status !== 200) {
+      return false;
+    }
+
+    // The upstream returns {"status":"verified"} on success and 401/404 on every
+    // failure path. `valid` is accepted too, for forward compatibility.
+    const data = response.data;
+    if (!data || typeof data !== 'object') {
+      return false;
+    }
+    if (data.status !== 'verified' && data.valid !== true) {
+      return false;
+    }
+
+    if (
+      typeof data.email === 'string' &&
+      data.email.toLowerCase() !== email.toLowerCase()
+    ) {
+      console.warn('Session verification email mismatch.');
+      return false;
+    }
+
+    return true;
   } catch (error) {
     console.error('Error verifying session integrity:', error);
     return false;
