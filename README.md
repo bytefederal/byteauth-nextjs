@@ -106,6 +106,16 @@ pages/api/byteauth/check.ts
 pages/api/auth/[...nextauth].ts
 ```
 
+> **Security notice — if you copied these files before v0.1.3, re-copy them.**
+>
+> Versions up to and including 0.1.2 contained a session-verification weakness
+> in `login.ts` and `registration.ts`. Because these handlers are copied into
+> your own codebase rather than imported, **upgrading the package alone does not
+> remediate it** — you must re-copy both files, or apply the equivalent change.
+>
+> The `verifySession` helper exported from `useByteAuth` is deprecated as of
+> v0.1.3 and now always returns false. Verify sessions server-side only.
+
 For session storage, we recommend using Redis. Install the Redis client:
 
 ```bash
