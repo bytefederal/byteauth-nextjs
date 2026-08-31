@@ -85,14 +85,22 @@ async function verifySessionIntegrity(sid: string, email: string): Promise<boole
 
     // SECURITY: a 2xx alone is not proof of a valid session — an upstream that
     // returns 200 for an unknown or mismatched sid would yield a false "valid".
-    // Require an explicit valid=true AND that the verified email matches the one
-    // we were asked to authenticate. That second check binds sid <-> email.
+    // Require an affirmative marker in the body AND that the verified email
+    // matches the one we were asked to authenticate. That second check binds
+    // sid <-> email.
     if (response.status !== 200) {
       return false;
     }
 
+    // The upstream returns {"status":"verified"} on success and raises 401/404
+    // on every failure path — it never sends a `valid` field. `valid === true`
+    // is accepted as well so a future upstream can switch shape without
+    // breaking this handler.
     const data = response.data;
-    if (!data || typeof data !== 'object' || data.valid !== true) {
+    if (!data || typeof data !== 'object') {
+      return false;
+    }
+    if (data.status !== 'verified' && data.valid !== true) {
       return false;
     }
 
